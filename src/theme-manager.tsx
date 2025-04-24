@@ -18,6 +18,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { Device } from './device';
 import { dimensionsDesignedDeviceConfig } from './config';
 import { applyScale } from './scale';
+import { hexToRgba } from './utils';
 
 enum Events {
     ChangeTheme = 'ChangeTheme',
@@ -89,11 +90,22 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
         const createStyleSheet = ({ theme, overrideAutoScale }: { theme: C[keyof C]; device: IDevice; overrideAutoScale?: boolean }) => {
             const shouldScale = overrideAutoScale !== undefined ? overrideAutoScale : this.autoScale;
 
-            const modifiedStyles = shouldScale
-                ? applyScale(stylesCreator({ theme, device: this.device, scale: this.scale }), this.scale)
-                : stylesCreator({ theme, device: this.device, scale: this.scale });
+            const params = {
+                theme,
+                device: this.device,
+                scale: this.scale,
+                utils: {
+                    hexToRgba,
+                },
+            };
 
-            return StyleSheet.create<B>(modifiedStyles);
+            let styles = stylesCreator(params);
+
+            if (shouldScale) {
+                applyScale(styles, this.scale);
+            }
+
+            return StyleSheet.create<B>(styles);
         };
 
         return ({ overrideThemeName, overrideAutoScale }: IUseCreateStyleSheet<C> = {}): B => {

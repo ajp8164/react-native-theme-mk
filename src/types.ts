@@ -140,6 +140,9 @@ export type IStyleCreator<C, B extends INamedStyles<B> | INamedStyles<any>> = (p
     theme: C[keyof C];
     device: IDevice;
     scale: IScale;
+    utils: {
+        hexToRgba: (hex: string, opacity?: number) => string;
+    };
 }) => B & INamedStyles<any>;
 
 /**
