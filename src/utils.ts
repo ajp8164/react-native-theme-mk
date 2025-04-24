@@ -1,4 +1,4 @@
-export function hexToRgba(hex: string, opacity = 1) {
+export function hexToRgba(hex: string, opacity = 1): string {
     var c: string[];
 
     if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
@@ -8,7 +8,6 @@ export function hexToRgba(hex: string, opacity = 1) {
         }
 
         let res: any = '0x' + c.join('');
-        // eslint-disable-next-line no-bitwise
         return 'rgba(' + [(res >> 16) & 255, (res >> 8) & 255, res & 255].join(',') + `,${opacity})`;
     }
     throw new Error('Bad Hex');
