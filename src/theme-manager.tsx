@@ -98,7 +98,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
         orientation: string;
     }): string {
         const hash = objectHash(stylesObject);
-        const scaleKey = overrideAutoScale ? 'scale' : 'no-scale';
+        const scaleKey = overrideAutoScale || this.scale;
 
         return `${scaleKey}_${orientation}_${hash}`;
     }
