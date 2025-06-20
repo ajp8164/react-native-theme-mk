@@ -1,6 +1,7 @@
 import { Dimensions, Platform, type EmitterSubscription } from 'react-native';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 import { type IDevice, type IDeviceInternal, Orientation } from './types';
+import EventEmitter from 'events';
 
 function getOrientation(height: number, width: number) {
     return width < height ? Orientation.Portrait : Orientation.Landscape;
@@ -11,6 +12,11 @@ const isPad = () => !!Platform?.isPad;
 
 export class Device implements IDevice, IDeviceInternal {
     dimentsionSubscription: EmitterSubscription | null = null;
+    private emitter = new EventEmitter();
+
+    constructor() {
+        this.addInternalListener();
+    }
 
     get isAndroid() {
         return Platform.OS === 'android';
@@ -72,5 +78,16 @@ export class Device implements IDevice, IDeviceInternal {
 
     removeListeners() {
         this.dimentsionSubscription?.remove();
+    }
+
+    private addInternalListener() {
+        Dimensions.addEventListener('change', () => {
+            this.emitter.emit('changeOrientation');
+        });
+    }
+
+    onChange(callback: () => void): () => void {
+        this.emitter.addListener('changeOrientation', callback);
+        return () => this.emitter.removeListener('changeOrientation', callback);
     }
 }

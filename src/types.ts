@@ -3,6 +3,7 @@ import { StyleSheet, type EmitterSubscription, type ImageStyle, type TextStyle, 
 export interface IDeviceInternal {
     dimentsionSubscription: EmitterSubscription | null;
     addDimensionsEventListener(callback: any): void;
+    onChange(callback: () => void): () => void;
     removeListeners(): void;
 }
 

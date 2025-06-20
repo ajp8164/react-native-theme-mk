@@ -1,6 +1,7 @@
 import EventEmitter from 'events';
 
 import { StyleSheet } from 'react-native';
+import objectHash from 'object-hash';
 
 import {
     type IThemeManager,
@@ -19,6 +20,7 @@ import { Device } from './device';
 import { dimensionsDesignedDeviceConfig } from './config';
 import { applyScale } from './scale';
 import { hexToRgba } from './utils';
+import { useDeviceSnapshotOrientation } from './useDeviceSnapshot';
 
 enum Events {
     ChangeTheme = 'ChangeTheme',
@@ -86,6 +88,21 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
         this.autoScale = value;
     }
 
+    private generateHash({
+        overrideAutoScale,
+        stylesObject,
+        orientation,
+    }: {
+        overrideAutoScale?: boolean;
+        stylesObject: object;
+        orientation: string;
+    }): string {
+        const hash = objectHash(stylesObject);
+        const scaleKey = overrideAutoScale ? 'scale' : 'no-scale';
+
+        return `${scaleKey}_${orientation}_${hash}`;
+    }
+
     createStyleSheet<B extends INamedStyles<B> & INamedStyles<any>>(stylesCreator: IStyleCreator<C, B>) {
         const createStyleSheet = ({ theme, overrideAutoScale }: { theme: C[keyof C]; device: IDevice; overrideAutoScale?: boolean }) => {
             const shouldScale = overrideAutoScale !== undefined ? overrideAutoScale : this.autoScale;
@@ -105,26 +122,40 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
                 applyScale(styles, this.scale);
             }
 
-            return StyleSheet.create<B>(styles);
+            const sheet = StyleSheet.create<B>(styles);
+
+            return {
+                rawStyles: styles,
+                sheet,
+            };
         };
 
         return ({ overrideThemeName, overrideAutoScale }: IUseCreateStyleSheet<C> = {}): B => {
             const theme = this.useTheme({ overrideThemeName });
-            const cache = useRef<Record<keyof C, B>>({} as unknown as Record<keyof C, B>).current;
+            const cache = useRef<Record<keyof C, { hash: string; sheet: B }>>({} as Record<keyof C, { hash: string; sheet: B }>).current;
+            const orientation = useDeviceSnapshotOrientation(this.device);
 
             const styles = useMemo(() => {
                 const currentName = overrideThemeName || this.name;
 
-                if (!cache[currentName]) {
-                    cache[currentName] = createStyleSheet({
-                        theme,
-                        device: this.device,
-                        overrideAutoScale,
-                    });
+                const { rawStyles, sheet } = createStyleSheet({
+                    theme,
+                    device: this.device,
+                    overrideAutoScale,
+                });
+
+                const hash = this.generateHash({
+                    overrideAutoScale,
+                    stylesObject: rawStyles,
+                    orientation,
+                });
+
+                if (!cache[currentName] || cache[currentName].hash !== hash) {
+                    cache[currentName] = { hash, sheet };
                 }
 
-                return cache?.[currentName];
-            }, [theme, cache, overrideThemeName, overrideAutoScale]);
+                return cache[currentName].sheet;
+            }, [theme, overrideThemeName, overrideAutoScale, stylesCreator, orientation]);
 
             return styles;
         };
