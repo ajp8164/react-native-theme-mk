@@ -1,9 +1,8 @@
-import { StyleSheet, type EmitterSubscription, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
+import { StyleSheet, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 
 export interface IDeviceInternal {
-    dimentsionSubscription: EmitterSubscription | null;
-    addDimensionsEventListener(callback: any): void;
-    onChange(callback: () => void): () => void;
+    init(callback: any): void;
+    key: string;
     removeListeners(): void;
 }
 

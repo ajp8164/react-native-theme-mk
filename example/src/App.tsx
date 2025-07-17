@@ -1,8 +1,6 @@
 import { HomeScreen } from './screens/Home';
 import { ShopScreen } from './screens/Shop';
-import { ThemeManager } from './styles';
-
-const { ThemeProvider } = ThemeManager;
+import { ThemeProvider } from './styles';
 
 export default function App() {
     return (
