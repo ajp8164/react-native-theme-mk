@@ -1,7 +1,6 @@
 import { Dimensions, Platform, type EmitterSubscription } from 'react-native';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 import { type IDevice, type IDeviceInternal, Orientation } from './types';
-import EventEmitter from 'events';
 
 function getOrientation(height: number, width: number) {
     return width < height ? Orientation.Portrait : Orientation.Landscape;
@@ -12,11 +11,10 @@ const isPad = () => !!Platform?.isPad;
 
 export class Device implements IDevice, IDeviceInternal {
     dimentsionSubscription: EmitterSubscription | null = null;
-    private emitter = new EventEmitter();
 
-    constructor() {
-        this.addInternalListener();
-    }
+    window = Dimensions.get('window');
+
+    screen = Dimensions.get('screen');
 
     get isAndroid() {
         return Platform.OS === 'android';
@@ -31,14 +29,6 @@ export class Device implements IDevice, IDeviceInternal {
 
     get isIphoneX() {
         return this.isIOS && isPad() && !Platform.isTV && (this.window.height >= 812 || this.window.width >= 812);
-    }
-
-    get window() {
-        return Dimensions.get('window');
-    }
-
-    get screen() {
-        return Dimensions.get('screen');
     }
 
     get orientation() {
@@ -72,22 +62,22 @@ export class Device implements IDevice, IDeviceInternal {
         return this.isPortrait ? this.window.height / this.window.width : this.window.width / this.window.height;
     }
 
-    addDimensionsEventListener(callback: any) {
-        this.dimentsionSubscription = Dimensions.addEventListener('change', callback);
+    get key() {
+        return `screen:${this.screen.width}x${this.screen.height}-window:${this.window.width}x${this.window.height}`;
+    }
+
+    init(callback: any) {
+        this.window = Dimensions.get('window');
+        this.screen = Dimensions.get('screen');
+
+        this.dimentsionSubscription = Dimensions.addEventListener('change', ({ window, screen }) => {
+            this.window = { ...window };
+            this.screen = { ...screen };
+            callback();
+        });
     }
 
     removeListeners() {
         this.dimentsionSubscription?.remove();
-    }
-
-    private addInternalListener() {
-        Dimensions.addEventListener('change', () => {
-            this.emitter.emit('changeOrientation');
-        });
-    }
-
-    onChange(callback: () => void): () => void {
-        this.emitter.addListener('changeOrientation', callback);
-        return () => this.emitter.removeListener('changeOrientation', callback);
     }
 }

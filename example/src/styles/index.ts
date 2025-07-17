@@ -12,4 +12,4 @@ export const ThemeManager = new ThemeManagerCreator(
         autoScale: true,
     },
 );
-ThemeManager;
+export const { ThemeProvider, useTheme, useDevice, useScale } = ThemeManager;

@@ -20,7 +20,6 @@ import { Device } from './device';
 import { dimensionsDesignedDeviceConfig } from './config';
 import { applyScale } from './scale';
 import { hexToRgba } from './utils';
-import { useDeviceSnapshotOrientation } from './useDeviceSnapshot';
 
 enum Events {
     ChangeTheme = 'ChangeTheme',
@@ -30,6 +29,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
     name: keyof C;
     private themes: C;
     context: React.Context<C[keyof C]>;
+    contextDevice: React.Context<string>;
     device: IDevice & IDeviceInternal;
     autoScale?: boolean;
     dimensionsDesignedDevice: IDimensionDesignedDevice;
@@ -42,6 +42,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
         this.themes = themes;
         this.name = name;
         this.context = createContext({} as C[keyof C]);
+        this.contextDevice = createContext('');
         this.device = new Device();
         this.autoScale = !!autoScale;
         this.dimensionsDesignedDevice = dimensionsDesignedDevice || dimensionsDesignedDeviceConfig;
@@ -67,6 +68,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
 
     removeAllListeners() {
         this.eventEmitter.removeAllListeners();
+        this.device.removeListeners();
     }
 
     get scale(): IScale {
@@ -91,16 +93,16 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
     private generateHash({
         overrideAutoScale,
         stylesObject,
-        orientation,
+        deviceKey,
     }: {
         overrideAutoScale?: boolean;
         stylesObject: object;
-        orientation: string;
+        deviceKey: string;
     }): string {
         const hash = objectHash(stylesObject);
         const scaleKey = overrideAutoScale || this.scale;
 
-        return `${scaleKey}_${orientation}_${hash}`;
+        return `${scaleKey}_${deviceKey}_${hash}`;
     }
 
     createStyleSheet<B extends INamedStyles<B> & INamedStyles<any>>(stylesCreator: IStyleCreator<C, B>) {
@@ -133,7 +135,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
         return ({ overrideThemeName, overrideAutoScale }: IUseCreateStyleSheet<C> = {}): B => {
             const theme = this.useTheme({ overrideThemeName });
             const cache = useRef<Record<keyof C, { hash: string; sheet: B }>>({} as Record<keyof C, { hash: string; sheet: B }>).current;
-            const orientation = useDeviceSnapshotOrientation(this.device);
+            const deviceKey = this.useContextDevice();
 
             const styles = useMemo(() => {
                 const currentName = overrideThemeName || this.name;
@@ -147,7 +149,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
                 const hash = this.generateHash({
                     overrideAutoScale,
                     stylesObject: rawStyles,
-                    orientation,
+                    deviceKey,
                 });
 
                 if (!cache[currentName] || cache[currentName].hash !== hash) {
@@ -155,7 +157,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
                 }
 
                 return cache[currentName].sheet;
-            }, [theme, overrideThemeName, overrideAutoScale, stylesCreator, orientation]);
+            }, [theme, overrideThemeName, overrideAutoScale, stylesCreator, deviceKey]);
 
             return styles;
         };
@@ -163,12 +165,20 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
 
     ThemeProvider = ({ children }: React.PropsWithChildren<{}>) => {
         const [currentThemeName, setCurrentThemeName] = useState<keyof C>(this.name);
+        const [deviceKey, setDeviceKey] = useState<string>('');
 
         useEffect(() => {
             const unsubscribe = this.onChangeName((name) => {
                 setCurrentThemeName(name);
             });
-            return unsubscribe;
+
+            this.device.init(() => {
+                setDeviceKey(this.device.key);
+            });
+            return () => {
+                unsubscribe();
+                this.removeAllListeners();
+            };
         }, []);
 
         if (!children) {
@@ -176,8 +186,13 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
         }
 
         const { Provider } = this.context;
+        const { Provider: DeviceProvider } = this.contextDevice;
 
-        return <Provider value={this.get(currentThemeName)}>{children}</Provider>;
+        return (
+            <Provider value={this.get(currentThemeName)}>
+                <DeviceProvider value={deviceKey}>{children}</DeviceProvider>
+            </Provider>
+        );
     };
 
     useTheme = (params?: Pick<IUseCreateStyleSheet<C>, 'overrideThemeName'>) => {
@@ -189,7 +204,12 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
     };
 
     useDevice = () => {
+        this.useContextDevice();
         return this.device;
+    };
+
+    private useContextDevice = () => {
+        return useContext<string>(this.contextDevice);
     };
 
     useScale = () => {
