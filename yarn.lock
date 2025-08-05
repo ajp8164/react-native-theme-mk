@@ -12146,13 +12146,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"object-hash@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "object-hash@npm:3.0.0"
-  checksum: 80b4904bb3857c52cc1bfd0b52c0352532ca12ed3b8a6ff06a90cd209dfda1b95cee059a7625eb9da29537027f68ac4619363491eedb2f5d3dddbba97494fd6c
-  languageName: node
-  linkType: hard
-
 "object-inspect@npm:^1.13.1":
   version: 1.13.2
   resolution: "object-inspect@npm:1.13.2"
@@ -13249,7 +13242,6 @@ __metadata:
     eslint-plugin-prettier: ^5.0.1
     events: ^3.3.0
     jest: ^29.7.0
-    object-hash: ^3.0.0
     prettier: ^3.0.3
     react: 18.2.0
     react-native: 0.74.5

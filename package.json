@@ -88,8 +88,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "events": "^3.3.0",
-    "object-hash": "^3.0.0"
+    "events": "^3.3.0"
   },
   "resolutions": {
     "@types/react": "^18.2.44"
