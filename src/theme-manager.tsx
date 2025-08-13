@@ -1,7 +1,6 @@
 import EventEmitter from 'events';
 
 import { StyleSheet } from 'react-native';
-import objectHash from 'object-hash';
 
 import {
     type IThemeManager,
@@ -99,7 +98,7 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
         stylesObject: object;
         deviceKey: string;
     }): string {
-        const hash = objectHash(stylesObject);
+        const hash = JSON.stringify(stylesObject);
         const scaleKey = overrideAutoScale || this.scale;
 
         return `${scaleKey}_${deviceKey}_${hash}`;
