@@ -18,22 +18,26 @@ jest.mock('react-native', () => ({
     },
 }));
 
-jest.mock('react-native-safe-area-context', () => ({
-    initialWindowMetrics: {
-        frame: {
-            x: 0,
-            y: 0,
-            width: 375,
-            height: 812,
+jest.mock(
+    'react-native-safe-area-context',
+    () => ({
+        initialWindowMetrics: {
+            frame: {
+                x: 0,
+                y: 0,
+                width: 375,
+                height: 812,
+            },
+            insets: {
+                top: 44,
+                left: 0,
+                right: 0,
+                bottom: 34,
+            },
         },
-        insets: {
-            top: 44,
-            left: 0,
-            right: 0,
-            bottom: 34,
-        },
-    },
-}));
+    }),
+    { virtual: true },
+);
 
 describe('Device', () => {
     let device: Device;
