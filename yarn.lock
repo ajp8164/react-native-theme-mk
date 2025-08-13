@@ -13233,7 +13233,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-    react-native-safe-area-context: ^5.4.0
+    react-native-safe-area-context: "*"
   languageName: unknown
   linkType: soft
 

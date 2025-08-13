@@ -94,7 +94,7 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-safe-area-context": "^5.4.0"
+    "react-native-safe-area-context": "*"
   },
   "workspaces": [
     "example",
