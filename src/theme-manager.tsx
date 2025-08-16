@@ -24,6 +24,7 @@ import merge from 'lodash/merge';
 
 enum Events {
     ChangeTheme = 'ChangeTheme',
+    UpdateTheme = 'UpdateTheme',
 }
 
 export class ThemeManager<C extends Record<string, object>> implements IThemeManager<C> {
@@ -64,11 +65,17 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
 
     update(extendedThemes: DeepPartial<C>) {
         this.themes = merge({}, this.themes, extendedThemes);
+        this.eventEmitter.emit(Events.UpdateTheme);
     }
 
     onChangeName(cb: OnChangeCallBack<keyof C>): () => void {
         this.eventEmitter.on(Events.ChangeTheme, cb);
         return () => this.eventEmitter.removeListener(Events.ChangeTheme, cb);
+    }
+
+    onUpdatedTheme(cb: OnChangeCallBack<C>): () => void {
+        this.eventEmitter.on(Events.UpdateTheme, () => cb(this.themes));
+        return () => this.eventEmitter.removeListener(Events.UpdateTheme, cb);
     }
 
     removeAllListeners() {
@@ -171,17 +178,24 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
     ThemeProvider = ({ children }: React.PropsWithChildren<{}>) => {
         const [currentThemeName, setCurrentThemeName] = useState<keyof C>(this.name);
         const [deviceKey, setDeviceKey] = useState<string>('');
+        const [, setForce] = useState<number>(0);
 
         useEffect(() => {
-            const unsubscribe = this.onChangeName((name) => {
+            const unsubscribeChange = this.onChangeName((name) => {
                 setCurrentThemeName(name);
+            });
+
+            const unsubscribeUpdate = this.onUpdatedTheme(() => {
+                setForce((prev) => prev + 1);
             });
 
             this.device.init(() => {
                 setDeviceKey(this.device.key);
             });
+
             return () => {
-                unsubscribe();
+                unsubscribeChange();
+                unsubscribeUpdate();
                 this.removeAllListeners();
             };
         }, []);
