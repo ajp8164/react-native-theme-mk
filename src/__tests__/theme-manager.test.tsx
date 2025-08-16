@@ -52,10 +52,32 @@ describe('Theme manager', () => {
         expect(themeManager.name).toStrictEqual('dark');
     });
 
-    it('should update current theme name', () => {
+    it('should update current theme name and call onChangeName listener', () => {
+        const listener = jest.fn();
+        themeManager.onChangeName(listener);
         themeManager.set('light');
-
         expect(themeManager.theme).toStrictEqual(light);
         expect(themeManager.name).toStrictEqual('light');
+        expect(listener).toHaveBeenCalledWith('light');
+    });
+
+    it('should update themes with update() and call onUpdatedTheme listener', () => {
+        const listener = jest.fn();
+        themeManager.onUpdatedTheme(listener);
+        themeManager.update({ light: { color: 'gray' } });
+        expect(themeManager.get('light')).toStrictEqual({ color: 'gray' });
+        expect(listener).toHaveBeenCalledWith(expect.objectContaining({ light: { color: 'gray' } }));
+    });
+
+    it('should expose device and dimensionsDesignedDevice properties', () => {
+        expect(themeManager.device).toBeDefined();
+        expect(themeManager.dimensionsDesignedDevice).toBeDefined();
+    });
+
+    it('should return scale object from useScale', () => {
+        const scale = themeManager.useScale();
+        expect(scale).toHaveProperty('horizontal');
+        expect(scale).toHaveProperty('vertical');
+        expect(scale).toHaveProperty('symmetric');
     });
 });

@@ -27,4 +27,6 @@ export class Device implements IDevice {
     isShortScreen = false;
     isSmallScreen = false;
     isTablet = false;
+
+    removeAllListeners = jest.fn();
 }

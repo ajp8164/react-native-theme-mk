@@ -152,6 +152,13 @@ export type IStyleCreator<C, B extends INamedStyles<B> | INamedStyles<any>> = (p
  */
 export interface IThemeManager<C extends Record<string, object>> {
     /**
+     * Registers a callback to be called when the theme object is updated.
+     *
+     * @param cb - The callback function.
+     * @returns A function to remove the listener.
+     */
+    onUpdatedTheme(cb: OnChangeCallBack<C>): () => void;
+    /**
      * The name of the current theme.
      */
     name: keyof C;
