@@ -13,12 +13,14 @@ import {
     type IStyleCreator,
     type INamedStyles,
     type IScale,
+    type DeepPartial,
 } from './types';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Device } from './device';
 import { dimensionsDesignedDeviceConfig } from './config';
 import { applyScale } from './scale';
 import { hexToRgba } from './utils';
+import merge from 'lodash/merge';
 
 enum Events {
     ChangeTheme = 'ChangeTheme',
@@ -58,6 +60,10 @@ export class ThemeManager<C extends Record<string, object>> implements IThemeMan
 
     get(name: keyof C) {
         return this.themes[name];
+    }
+
+    update(extendedThemes: DeepPartial<C>) {
+        this.themes = merge({}, this.themes, extendedThemes);
     }
 
     onChangeName(cb: OnChangeCallBack<keyof C>): () => void {

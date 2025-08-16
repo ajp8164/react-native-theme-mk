@@ -182,6 +182,13 @@ export interface IThemeManager<C extends Record<string, object>> {
     get(name: keyof C): C[keyof C];
 
     /**
+     * Updates one or more themes.
+     *
+     * @param extendedThemes - An object consisting of partial or full themes.
+     */
+    update(extendedThemes: DeepPartial<C>): void;
+
+    /**
      * Registers a callback to be called when the theme name changes.
      *
      * @param cb - The callback function.
@@ -242,3 +249,7 @@ export interface IOptions {
     dimensionsDesignedDevice?: IDimensionDesignedDevice;
     autoScale?: boolean;
 }
+
+export type DeepPartial<T> = {
+    [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
